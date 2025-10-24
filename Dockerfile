@@ -1,5 +1,4 @@
-﻿FROM mcr.microsoft.com/dotnet/runtime:9.0 AS base
-USER $APP_UID
+﻿FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 EXPOSE 80
 WORKDIR /app
 

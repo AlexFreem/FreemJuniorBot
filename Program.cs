@@ -3,19 +3,26 @@ using FreemJuniorBot.Handlers;
 using FreemJuniorBot.Hosting;
 using FreemJuniorBot.Services;
 
-namespace FreemJuniorBot;
+var builder = WebApplication.CreateBuilder(args);
 
-public static class Program
+// Services
+builder.Services.AddSingleton<IBotClientAccessor, BotClientAccessor>();
+builder.Services.AddSingleton<IErrorHandler, ErrorHandler>();
+builder.Services.AddSingleton<IMessageHandler, MessageHandler>();
+
+// Background worker that runs the Telegram bot
+builder.Services.AddHostedService<Worker>();
+
+// Configure Kestrel to listen on port 80 by default if ASPNETCORE_URLS not set
+var urlsFromEnv = Environment.GetEnvironmentVariable("ASPNETCORE_URLS");
+
+if (string.IsNullOrWhiteSpace(urlsFromEnv))
 {
-    public static void Main(string[] args)
-    {
-        var builder = Host.CreateApplicationBuilder(args);
-        builder.Services.AddSingleton<IBotClientAccessor, BotClientAccessor>();
-        builder.Services.AddSingleton<IErrorHandler, ErrorHandler>();
-        builder.Services.AddSingleton<IMessageHandler, MessageHandler>();
-        builder.Services.AddHostedService<Worker>();
-
-        var host = builder.Build();
-        host.Run();
-    }
+    builder.WebHost.UseUrls("http://0.0.0.0:80");
 }
+
+var app = builder.Build();
+
+// Minimal health endpoint
+app.MapGet("/healthz", () => Results.Ok("OK"));
+app.Run();
