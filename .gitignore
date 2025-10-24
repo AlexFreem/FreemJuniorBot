@@ -1,5 +1,149 @@
-bin/
-obj/
-/packages/
+# .NET / Visual Studio / Rider.gitignore
+
+############
+# Build output
+############
+[Bb]in/
+[Oo]bj/
+artifacts/
+**/Debug/
+**/Release/
+
+############
+# IDE settings
+############
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider / IntelliJ
+.idea/
 riderModule.iml
+*.sln.DotSettings.user
+_ReSharper.Caches/
+*.DotSettings.user
+
+# VS Code
+.vscode/
+
+############
+# NuGet
+############
+# packages folder can be ignored except build/ is often needed
+packages/*
+!packages/build/
+!packages/repositories.config
+# NuGet v3 cache
+~/.nuget/
+# Package files
+*.nupkg
+*.snupkg
+# Lock files (legacy)
+project.lock.json
+project.fragment.lock.json
+
+############
+# Logs, temp, and diagnostics
+############
+*.log
+*.tlog
+*.vspscc
+*.vssscc
+*.pidb
+*.scc
+
+# Profiling
+*.psess
+*.vsp
+*.vspx
+*.sap
+
+############
+# Test results and coverage
+############
+TestResults/
+*.VisualState.xml
+*.coverage
+*.coveragexml
+coverage*.xml
+coverage*.json
+
+############
+# Publish settings
+############
+*.pubxml.user
+*.publishsettings
+
+############
+# Entity Framework
+############
+*_i.c
+*_p.c
+*.cache
+modelmanifest.xml
+
+############
+# ASP.NET Scaffolding
+############
+ScaffoldingReadMe.txt
+
+############
+# Other tooling
+############
+StyleCop.Cache
+
+############
+# OS generated
+############
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+############
+# Rider & ReSharper additional caches
+############
 /_ReSharper.Caches/
+
+############
+# Docker
+############
+**/*.dockerignore
+**/Dockerfile.deps
+
+############
+# Local settings and secrets patterns (keep shared appsettings tracked)
+############
+appsettings.*.Local.json
+*.local.settings.json
+############
+# Environment variable files
+############
+# Common .env patterns (keep examples tracked)
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.env
+*.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+############
+# Local launch profiles (may include env vars/secrets)
+############
+Properties/launchSettings.json
