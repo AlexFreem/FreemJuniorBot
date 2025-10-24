@@ -4,7 +4,7 @@ using Telegram.Bot;
 
 namespace FreemJuniorBot.Services;
 
-public sealed class CommandService(ILogger<CommandService> logger, IBotClientAccessor botClientAccessor, IMessageHandler messageHandler) : ICommandService
+public sealed class CommandService(IBotClientAccessor botClientAccessor, IMessageHandler messageHandler) : ICommandService
 {
     
     private readonly ITelegramBotClient _botClient = botClientAccessor.Client;

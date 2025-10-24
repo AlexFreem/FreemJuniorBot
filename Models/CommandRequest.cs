@@ -2,6 +2,6 @@
 
 public sealed class CommandRequest
 {
-    public string? Command { get; set; }
-    public string? Value { get; set; }
+    public string? Command { get; init; }
+    public string? Value { get; init; }
 }
