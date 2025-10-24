@@ -1,5 +1,6 @@
 ﻿FROM mcr.microsoft.com/dotnet/runtime:9.0 AS base
 USER $APP_UID
+EXPOSE 80
 WORKDIR /app
 
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
