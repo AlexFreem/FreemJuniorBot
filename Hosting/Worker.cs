@@ -16,13 +16,15 @@ public sealed class Worker : BackgroundService
 
     private readonly IMessageHandler _messageHandler;
     private readonly IErrorHandler _errorHandler;
+    private readonly IOwnerIdProvider _ownerIdProvider;
 
-    public Worker(ILogger<Worker> logger, IBotClientAccessor botClientAccessor, IErrorHandler errorHandler, IMessageHandler messageHandler)
+    public Worker(ILogger<Worker> logger, IBotClientAccessor botClientAccessor, IErrorHandler errorHandler, IMessageHandler messageHandler, IOwnerIdProvider ownerIdProvider)
     {
         _logger = logger;
         _errorHandler = errorHandler;
         _messageHandler = messageHandler;
         _botClient = botClientAccessor.Client;
+        _ownerIdProvider = ownerIdProvider;
     }
 
     protected override async Task ExecuteAsync(CancellationToken ct)
@@ -38,35 +40,14 @@ public sealed class Worker : BackgroundService
         await Task.Delay(Timeout.Infinite, ct);
     }
 
-    private static string? GetOwnerIdRawFromEnv()
-    {
-        // Priority: TELEGRAM_OWNER_ID, then fallback: TELEGRAM_ADMIN_ID
-        return Environment.GetEnvironmentVariable("TELEGRAM_OWNER_ID")
-               ?? Environment.GetEnvironmentVariable("TELEGRAM_ADMIN_ID");
-    }
-
     private async Task NotifyRestartAsync(CancellationToken ct)
     {
         try
         {
-            var ownerIdRaw = GetOwnerIdRawFromEnv();
-
-            if (string.IsNullOrWhiteSpace(ownerIdRaw))
-            {
-                _logger.LogWarning("Переменная окружения TELEGRAM_OWNER_ID/TELEGRAM_ADMIN_ID не задана — уведомление о перезапуске не отправлено");
-                return;
-            }
-
-            if (!long.TryParse(ownerIdRaw, out var ownerId))
-            {
-                _logger.LogWarning("Значение переменной окружения TELEGRAM_OWNER_ID/TELEGRAM_ADMIN_ID некорректно: {Value}", ownerIdRaw);
-                return;
-            }
-
             var text = $"Приложение перезапущено в {DateTime.Now:G}";
 
-            await _botClient.SendMessage(new ChatId(ownerId), text, cancellationToken: ct);
-            _logger.LogInformation("Отправлено уведомление о перезапуске пользователю {OwnerId}", ownerId);
+            await _botClient.SendMessage(new ChatId(_ownerIdProvider.OwnerId), text, cancellationToken: ct);
+            _logger.LogInformation("Отправлено уведомление о перезапуске пользователю {OwnerId}", _ownerIdProvider.OwnerId);
         }
         catch (Exception ex)
         {

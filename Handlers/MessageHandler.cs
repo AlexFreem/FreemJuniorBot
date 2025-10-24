@@ -2,6 +2,7 @@
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using FreemJuniorBot.Abstractions;
+using FreemJuniorBot.Models;
 
 namespace FreemJuniorBot.Handlers;
 
@@ -9,7 +10,7 @@ namespace FreemJuniorBot.Handlers;
 /// Обработчик сообщений. Содержит обработчики для уже существующих кейсов сообщений (текст и фото)
 /// и маршрутизирует входящие обновления.
 /// </summary>
-public sealed class MessageHandler(ILogger<MessageHandler> logger) : IMessageHandler
+public sealed class MessageHandler(ILogger<MessageHandler> logger, IOwnerIdProvider ownerIdProvider) : IMessageHandler
 {
     /// <summary>
     /// Точка входа: маршрутизация по типам сообщений.
@@ -39,6 +40,18 @@ public sealed class MessageHandler(ILogger<MessageHandler> logger) : IMessageHan
         catch (Exception ex)
         {
             logger.LogError(ex, "Ошибка при обработке обновления");
+        }
+    }
+
+    public async Task HandleHTTPCommand(ITelegramBotClient botClient, CommandRequest command, CancellationToken ct)
+    {
+        try
+        {
+            await botClient.SendMessage(ownerIdProvider.OwnerId, $"{command.Command}: {command.Value}", cancellationToken: ct);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Ошибка при отправке команды");
         }
     }
 
