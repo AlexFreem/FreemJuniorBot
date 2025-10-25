@@ -2,6 +2,7 @@
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using FreemJuniorBot.Abstractions;
+using FreemJuniorBot.Models;
 
 namespace FreemJuniorBot.Hosting;
 
@@ -16,15 +17,15 @@ public sealed class Worker : BackgroundService
 
     private readonly IMessageHandler _messageHandler;
     private readonly IErrorHandler _errorHandler;
-    private readonly IOwnerIdProvider _ownerIdProvider;
+    private readonly long _ownerId;
 
-    public Worker(ILogger<Worker> logger, IBotClientAccessor botClientAccessor, IErrorHandler errorHandler, IMessageHandler messageHandler, IOwnerIdProvider ownerIdProvider)
+    public Worker(ILogger<Worker> logger, IBotClientAccessor botClientAccessor, IErrorHandler errorHandler, IMessageHandler messageHandler, BotSettings botSettings)
     {
         _logger = logger;
         _errorHandler = errorHandler;
         _messageHandler = messageHandler;
         _botClient = botClientAccessor.Client;
-        _ownerIdProvider = ownerIdProvider;
+        _ownerId = botSettings.OwnerId;
     }
 
     protected override async Task ExecuteAsync(CancellationToken ct)
@@ -46,8 +47,8 @@ public sealed class Worker : BackgroundService
         {
             var text = $"Приложение перезапущено в {DateTime.Now:G}";
 
-            await _botClient.SendMessage(new ChatId(_ownerIdProvider.OwnerId), text, cancellationToken: ct);
-            _logger.LogInformation("Отправлено уведомление о перезапуске пользователю {OwnerId}", _ownerIdProvider.OwnerId);
+            await _botClient.SendMessage(new ChatId(_ownerId), text, cancellationToken: ct);
+            _logger.LogInformation("Отправлено уведомление о перезапуске пользователю {OwnerId}", _ownerId);
         }
         catch (Exception ex)
         {

@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using FreemJuniorBot.Abstractions;
 using FreemJuniorBot.Handlers;
@@ -7,24 +8,53 @@ using FreemJuniorBot.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Helper: bind from a named section then overlay root/env and validate data annotations
+T BindAndValidate<T>(string sectionName) where T : new()
+{
+    var instance = new T();
+    var section = builder.Configuration.GetSection(sectionName);
+    section.Bind(instance); // bind from section first
+    builder.Configuration.Bind(instance); // overlay root/env
+
+    var ctx = new ValidationContext(instance);
+    var results = new List<ValidationResult>();
+    if (!Validator.TryValidateObject(instance, ctx, results, validateAllProperties: true))
+    {
+        var message = string.Join("; ", results.Select(r => r.ErrorMessage));
+        throw new ValidationException($"Configuration for '{typeof(T).Name}' is invalid: {message}");
+    }
+
+    return instance;
+}
+
+// Settings bound via configuration binder (sections + env) and validated
+var botSettings = BindAndValidate<BotSettings>("Bot");
+var webSettings = BindAndValidate<WebSettings>("Web");
+var databaseSettings = BindAndValidate<DatabaseSettings>("Database");
+
+builder.Services.AddSingleton(botSettings);
+builder.Services.AddSingleton(webSettings);
+builder.Services.AddSingleton(databaseSettings);
+
 // Services
 builder.Services.AddSingleton<IBotClientAccessor, BotClientAccessor>();
 builder.Services.AddSingleton<IErrorHandler, ErrorHandler>();
 builder.Services.AddSingleton<IMessageHandler, MessageHandler>();
 // Command processing service
 builder.Services.AddSingleton<ICommandService, CommandService>();
-// Owner/Admin id provider
-builder.Services.AddSingleton<IOwnerIdProvider, OwnerIdProvider>();
+// Owner/Admin id provider is no longer used; BotSettings is used directly for owner id
 
 // Background worker that runs the Telegram bot
 builder.Services.AddHostedService<Worker>();
 
 // Configure Kestrel to listen on port 80 by default if ASPNETCORE_URLS not set
-var urlsFromEnv = Environment.GetEnvironmentVariable("ASPNETCORE_URLS");
-
-if (string.IsNullOrWhiteSpace(urlsFromEnv))
+if (string.IsNullOrWhiteSpace(webSettings.Urls))
 {
     builder.WebHost.UseUrls("http://0.0.0.0:80");
+}
+else
+{
+    builder.WebHost.UseUrls(webSettings.Urls);
 }
 
 var app = builder.Build();

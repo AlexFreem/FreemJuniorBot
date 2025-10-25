@@ -10,8 +10,10 @@ namespace FreemJuniorBot.Handlers;
 /// Обработчик сообщений. Содержит обработчики для уже существующих кейсов сообщений (текст и фото)
 /// и маршрутизирует входящие обновления.
 /// </summary>
-public sealed class MessageHandler(ILogger<MessageHandler> logger, IOwnerIdProvider ownerIdProvider) : IMessageHandler
+public sealed class MessageHandler(ILogger<MessageHandler> logger, BotSettings botSettings) : IMessageHandler
 {
+    private readonly long _ownerId = botSettings.OwnerId;
+
     /// <summary>
     /// Точка входа: маршрутизация по типам сообщений.
     /// </summary>
@@ -47,7 +49,7 @@ public sealed class MessageHandler(ILogger<MessageHandler> logger, IOwnerIdProvi
     {
         try
         {
-            await botClient.SendMessage(ownerIdProvider.OwnerId, $"{command.Command}: {command.Value}", cancellationToken: ct);
+            await botClient.SendMessage(_ownerId, $"{command.Command}: {command.Value}", cancellationToken: ct);
         }
         catch (Exception ex)
         {
