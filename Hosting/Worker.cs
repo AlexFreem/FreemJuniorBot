@@ -6,33 +6,26 @@ using FreemJuniorBot.Models;
 
 namespace FreemJuniorBot.Hosting;
 
-public sealed class Worker : BackgroundService
+public sealed class Worker(
+    ILogger<Worker> logger,
+    IBotClientAccessor botClientAccessor,
+    IErrorHandler errorHandler,
+    IMessageHandler messageHandler,
+    BotSettings botSettings)
+    : BackgroundService
 {
-    private readonly ILogger<Worker> _logger;
-    private readonly ITelegramBotClient _botClient;
+    private readonly ITelegramBotClient _botClient = botClientAccessor.Client;
+    private readonly long _ownerId = botSettings.OwnerId;
     private readonly ReceiverOptions _receiverOptions = new()
     {
         AllowedUpdates = []
     };
 
-    private readonly IMessageHandler _messageHandler;
-    private readonly IErrorHandler _errorHandler;
-    private readonly long _ownerId;
-
-    public Worker(ILogger<Worker> logger, IBotClientAccessor botClientAccessor, IErrorHandler errorHandler, IMessageHandler messageHandler, BotSettings botSettings)
-    {
-        _logger = logger;
-        _errorHandler = errorHandler;
-        _messageHandler = messageHandler;
-        _botClient = botClientAccessor.Client;
-        _ownerId = botSettings.OwnerId;
-    }
-
     protected override async Task ExecuteAsync(CancellationToken ct)
     {
         _botClient.StartReceiving(
-            updateHandler: _messageHandler.HandleAsync,
-            errorHandler: _errorHandler.HandleAsync,
+            updateHandler: messageHandler.HandleAsync,
+            errorHandler: errorHandler.HandleAsync,
             receiverOptions: _receiverOptions,
             cancellationToken: ct
         );
@@ -48,11 +41,11 @@ public sealed class Worker : BackgroundService
             var text = $"Приложение перезапущено в {DateTime.Now:G}";
 
             await _botClient.SendMessage(new ChatId(_ownerId), text, cancellationToken: ct);
-            _logger.LogInformation("Отправлено уведомление о перезапуске пользователю {OwnerId}", _ownerId);
+            logger.LogInformation("Отправлено уведомление о перезапуске пользователю {OwnerId}", _ownerId);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Не удалось отправить уведомление о перезапуске");
+            logger.LogWarning(ex, "Не удалось отправить уведомление о перезапуске");
         }
     }
 }
